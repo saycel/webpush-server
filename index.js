@@ -123,7 +123,7 @@ const sendPushNotification = (data, cb) => {
               p256dh: user.p256dh
             }
           };
-          webpush.sendNotification(pushSubscription, data.payload)
+          webpush.sendNotification(pushSubscription, JSON.stringify(data.payload) )
             .then( (data) => cb(data))
             .catch( (err) => cb(err));
         } else {
