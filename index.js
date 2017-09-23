@@ -11,6 +11,14 @@ app.set('json spaces', 40);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended : true }));
 
+// Enable CROSS
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+
 // Setup secret key (Internal validation for send push notification)
 let secretKey = process.env.PUSH_SECRET || 'no_secure';
 if (secretKey === 'no_secure') console.warn(chalk.bgRed('Warning: Using unsecure key'));
