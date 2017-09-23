@@ -12,11 +12,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended : true }));
 
 // Enable CROSS
-app.use(function(req, res, next) {
+/*app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
+*/
 
 
 // Setup secret key (Internal validation for send push notification)
@@ -120,26 +121,29 @@ const saveUser = (data, pushKeys, cb) => {
 
 const sendPushNotification = (data, cb) => {
   UserPush.sync().then(() => {
-    UserPush.findOne({ where: {user: data.user } })
-      .then(user => {
-        if(user) {
-          webpush.setVapidDetails('mailto:no-reply@webph.one', user.publicKey, user.privateKey);
-          const pushSubscription = {
-            endpoint: user.endpoint,
-            keys: {
-              auth: user.auth,
-              p256dh: user.p256dh
-            }
-          };
-          webpush.sendNotification(pushSubscription, JSON.stringify(data.payload) )
-            .then( (data) => cb(data))
-            .catch( (err) => cb(err));
+    UserPush.findAll({ where: {user: data.user } })
+      .then(users => {
+        if(users.length > 0) {
+          let result = users.map( user => {
+            webpush.setVapidDetails('mailto:no-reply@webph.one', user.publicKey, user.privateKey);
+            const pushSubscription = {
+              endpoint: user.endpoint,
+              keys: {
+                auth: user.auth,
+                p256dh: user.p256dh
+              }
+            };
+            webpush.sendNotification(pushSubscription, JSON.stringify(data.payload) )
+              .then( (data) => console.log('PUSH SEND:', data))
+              .catch( (err) => console.log('PUSH ERROR:', err));
+          })
+          cb({result: 'Sending push notificactions'});
         } else {
-          cb({'error':'User not found', id: data.user});
+        cb({'error':'User not found', id: data.user});
         }
       })
       .catch(() => {
-          cb({'error':'User not found', data: err})
+          cb({'error':'Table User not found', data: err})
       });
   })
   .catch(err => cb({'error':'Error, table user not found'}));
