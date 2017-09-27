@@ -8,7 +8,20 @@ const webpush     = require('web-push');
 const port = process.env.PUSH_PORT || 3000;
 const app = express();
 app.set('json spaces', 40);
-app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+    req.rawBody = ''
+    req.on('data', function(chunk) {
+        req.rawBody += chunk;
+    });
+
+    req.on('end', function() {
+      req.body = JSON.parse(req.rawBody.replace(/'/g, "\""));
+      next();
+    });  
+});
+
+//app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended : true }));
 
 // Enable CROSS
