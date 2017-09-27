@@ -21,8 +21,8 @@ app.use(bodyParser.urlencoded({ extended : true }));
 
 
 // Setup secret key (Internal validation for send push notification)
-let secretKey = process.env.PUSH_SECRET || 'no_secure';
-if (secretKey === 'no_secure') console.warn(chalk.bgRed('Warning: Using unsecure key'));
+let secretKey = process.env.PUSH_SECRET || 'bm9fc2VjdXJl';
+if (secretKey === 'bm9fc2VjdXJl') console.warn(chalk.bgRed('Warning: Using unsecure secret key'));
 
 // Setup VAPID keys (Push notification)
 let pushKeys;
@@ -133,7 +133,13 @@ const sendPushNotification = (data, cb) => {
                 p256dh: user.p256dh
               }
             };
-            webpush.sendNotification(pushSubscription, JSON.stringify(data.payload) )
+            webpush.sendNotification(pushSubscription, JSON.stringify(
+              {
+                notification: {
+                  title: 'Webph.one',
+                  data: data.payload
+                }
+              }))
               .then( (data) => console.log('PUSH SEND:', data))
               .catch( (err) => console.log('PUSH ERROR:', err));
           })
