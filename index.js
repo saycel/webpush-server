@@ -16,7 +16,11 @@ app.use((req, res, next) => {
     });
 
     req.on('end', function() {
-      req.body = JSON.parse(req.rawBody.replace(/'/g, "\""));
+      try {
+        req.body = JSON.parse(req.rawBody.replace(/'/g, "\""));
+      } catch (err) {
+        req.body = req.rawBody;
+      }
       next();
     });  
 });
