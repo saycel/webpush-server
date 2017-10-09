@@ -182,6 +182,7 @@ app.post('/survey', function (req, res) {
     .catch( err => res.json({ error: err }));
 });
 
+
 const Survey = sequelize.define('survey', {
   rating:    { type: Sequelize.STRING },
   issues:    { type: Sequelize.STRING },
@@ -211,6 +212,14 @@ const saveSurvey = (data, cb) => {
     .catch(err => cb({'error':'Error saving survey'}));
   });
 }
+
+app.get('/survey', function (req, res) {
+  Survey.sync().then(() => {
+    Survey.findAll().then((data)=> {
+      res.json(data)
+    })
+  })
+});
 
 // START EXPRESS
 app.listen(3000, () => {
