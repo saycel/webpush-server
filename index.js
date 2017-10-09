@@ -173,6 +173,45 @@ const sendPushNotification = (data, cb) => {
 };
 
 
+/******************
+ * After call survey
+*******************/
+app.post('/survey', function (req, res) {
+  checkData([ 'rating', 'issues', 'comments', 'timestamp', 'user', 'branch', 'revision' ], req.body)
+    .then( data => saveSurvey(data, (msg) => res.json(msg)))
+    .catch( err => res.json({ error: err }));
+});
+
+const Survey = sequelize.define('survey', {
+  rating:    { type: Sequelize.STRING },
+  issues:    { type: Sequelize.STRING },
+  comments:  { type: Sequelize.STRING },
+  timestamp: { type: Sequelize.STRING },
+  user:      { type: Sequelize.STRING },
+  branch:    { type: Sequelize.STRING },
+  revision:  { type: Sequelize.STRING }
+});
+
+const saveSurvey = (data, cb) => {
+  const surveyData = {
+    rating: data.rating,
+    issues: data.issues,
+    comments: data.comments,
+    timestamp: data.timestamp,
+    user: data.user,
+    branch: data.branch || 'no-branch',
+    revision: data.revision || 'no-revision'
+  };
+
+  Survey.sync().then(() => {
+    Survey.create(surveyData)
+    .spread((user, created) => {
+      cb({'status':'200'});
+    })
+    .catch(err => cb({'error':'Error saving survey'}));
+  });
+}
+
 // START EXPRESS
 app.listen(3000, () => {
   console.log(chalk.green('Listening on port ' + port + ' - Secret key: ' + secretKey));
