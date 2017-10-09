@@ -177,7 +177,7 @@ const sendPushNotification = (data, cb) => {
  * After call survey
 *******************/
 app.post('/survey', function (req, res) {
-  checkData([ ], req.body)
+  checkData([ 'rating', 'issues', 'comments', 'timestamp', 'user', 'branch', 'revision' ], req.body)
     .then( data => saveSurvey(data, (msg) => res.json(msg)))
     .catch( err => res.json({ error: err }));
 });
@@ -195,7 +195,7 @@ const Survey = sequelize.define('survey', {
 
 const saveSurvey = (data, cb) => {
   const surveyData = {
-    rating: data.rating || 0,
+    rating: data.rating || '',
     issues: data.issues || '',
     comments: data.comments || '',
     timestamp: data.timestamp || '',
