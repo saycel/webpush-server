@@ -177,7 +177,7 @@ const sendPushNotification = (data, cb) => {
  * After call survey
 *******************/
 app.post('/survey', function (req, res) {
-  checkData([ 'rating', 'issues', 'comments', 'timestamp', 'user', 'branch', 'revision' ], req.body)
+  checkData([], req.body)
     .then( data => saveSurvey(data, (msg) => res.json(msg)))
     .catch( err => res.json({ error: err }));
 });
