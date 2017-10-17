@@ -4,6 +4,8 @@ const bodyParser  = require('body-parser')
 const chalk       = require('chalk');
 const webpush     = require('web-push');
 
+const uuid = require('uuid/v4');
+
 // Setup express
 const port = process.env.PUSH_PORT || 3000;
 const app = express();
@@ -93,7 +95,11 @@ app.post('/send', function (req, res) {
     checkData([ 'user', 'secretKey', 'payload' ], req.body),
     checkSecret(secretKey, req.body)
   ])
-  .then(() => sendPushNotification(req.body, (msg) => res.json(msg)))
+  .then(() => sendPushNotification(req.body, (msg) => {
+    if(!res.headersSent) {
+      res.json(msg)}
+    }
+  ))
   .catch( err => res.json({ error: err }));
 });
 
@@ -132,9 +138,25 @@ const saveUser = (data, pushKeys, cb) => {
       }
       cb({'status':'created'});
     })
-    .catch(err => cb({'error':'Error saving user'}));
+    .catch(err => cb({ error: 'Error saving user'}));
   });
 }
+let pendingPushNotifications = [];
+const rejectCall = (id, status = 'rejected') => {
+  try {
+    pendingPushNotifications.filter(x => x.id === id)[0].cb({ status });
+    pendingPushNotifications = pendingPushNotifications.filter(x => x.id === id);
+  } catch (error) {
+    
+  }
+}
+
+app.get('/reject/:id', function (req, res) {
+  const id = req.params.id;
+  rejectCall(id);
+  res.json({status: 'rejected'});
+});
+
 
 const sendPushNotification = (data, cb) => {
   UserPush.sync().then(() => {
@@ -142,6 +164,8 @@ const sendPushNotification = (data, cb) => {
       .then(users => {
         if(users.length > 0) {
           let result = users.map( user => {
+            const id = uuid();
+            
             webpush.setVapidDetails('mailto:no-reply@webph.one', user.publicKey, user.privateKey);
             const pushSubscription = {
               endpoint: user.endpoint,
@@ -154,22 +178,26 @@ const sendPushNotification = (data, cb) => {
               {
                 notification: {
                   title: 'Webph.one',
-                  data: data.payload
+                  data: Object.assign({}, data.payload, {id: id})
                 }
               }))
-              .then( (data) => console.log('PUSH SEND:', data))
-              .catch( (err) => console.log('PUSH ERROR:', err));
+              .then( (data) => {
+                console.log('Waiting for reply - ', id)
+                setTimeout(()=> rejectCall(id, 'timeout'), 40000);
+                pendingPushNotifications.push({ id, cb });
+              })
+              .catch( (err) => cb({ error: 'Error ending push notificactions', data: err}));
           })
-          cb({result: 'Sending push notificactions'});
+          //cb({result: 'Sending push notificactions'});
         } else {
-        cb({'error':'User not found', id: data.user});
+        cb({ error :'User not found', id: data.user});
         }
       })
       .catch(() => {
-          cb({'error':'Table User not found', data: err})
+          cb({ error :'Table User not found', data: err})
       });
   })
-  .catch(err => cb({'error':'Error, table user not found'}));
+  .catch(err => cb({ error :'Error, table user not found'}));
 };
 
 
@@ -209,7 +237,7 @@ const saveSurvey = (data, cb) => {
     .spread((user, created) => {
       cb({'status':'200'});
     })
-    .catch(err => cb({'error':'Error saving survey'}));
+    .catch(err => cb({ error: 'Error saving survey'}));
   });
 }
 
