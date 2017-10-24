@@ -249,6 +249,48 @@ app.get('/survey', function (req, res) {
   })
 });
 
+/******************
+ * Feedback
+*******************/
+app.post('/feedback', function (req, res) {
+  checkData([], req.body)
+    .then( data => saveFeedback(data, (msg) => res.json(msg)))
+    .catch( err => res.json({ error: err }));
+});
+
+
+const Feedback = sequelize.define('feedback', {
+  comment:  { type: Sequelize.STRING },
+  user:      { type: Sequelize.STRING },
+  branch:    { type: Sequelize.STRING },
+  revision:  { type: Sequelize.STRING }
+});
+
+const saveFeedback = (data, cb) => {
+  const feedbackData = {
+    user: data.user || 'no-user',
+    comment: data.comment || 'no-comment',
+    branch: data.branch || 'no-branch',
+    revision: data.revision || 'no-revision'
+  };
+
+  Feedback.sync().then(() => {
+    Feedback.create(feedbackData)
+    .spread((feedback, created) => {
+      cb({'status':'200'});
+    })
+    .catch(err => cb({ error: 'Error saving feedback'}));
+  });
+}
+
+app.get('/feedback', function (req, res) {
+  Feedback.sync().then(() => {
+    Feedback.findAll().then((data)=> {
+      res.json(data)
+    })
+  })
+});
+
 // START EXPRESS
 app.listen(3000, () => {
   console.log(chalk.green('Listening on port ' + port + ' - Secret key: ' + secretKey));
