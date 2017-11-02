@@ -45,7 +45,7 @@ if( typeof process.env.PUSH_PUBLIC !== 'undefined' && typeof process.env.PUSH_PR
 const sequelize = new Sequelize('webphone', 'user', 'pwd', {
   host: 'localhost',
   dialect: 'sqlite',
-  storage: './sqlite.db'
+  storage: './db/sqlite.db'
 });
 
 // Util function - Check data
