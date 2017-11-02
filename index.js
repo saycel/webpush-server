@@ -3,7 +3,7 @@ const express     = require('express')
 const bodyParser  = require('body-parser')
 const chalk       = require('chalk');
 const webpush     = require('web-push');
-
+const kamaiJson   = require('./utils/kamailioJson')
 const uuid = require('uuid/v4');
 
 // Setup express
@@ -11,21 +11,7 @@ const port = process.env.PUSH_PORT || 3000;
 const app = express();
 app.set('json spaces', 40);
 
-app.use((req, res, next) => {
-    req.rawBody = ''
-    req.on('data', function(chunk) {
-        req.rawBody += chunk;
-    });
-
-    req.on('end', function() {
-      try {
-        req.body = JSON.parse(req.rawBody.replace(/'/g, "\""));
-      } catch (err) {
-        req.body = req.rawBody;
-      }
-      next();
-    });  
-});
+app.use(kamaiJson);
 
 //app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended : true }));
