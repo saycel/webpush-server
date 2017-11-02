@@ -130,7 +130,6 @@ const saveUser = (data, pushKeys, cb) => {
 let pendingPushNotifications = [];
 const rejectCall = (id, status = 'rejected') => {
   try {
-    pendingPushNotifications.filter(x => x.id === id)[0].cb({ status });
     pendingPushNotifications = pendingPushNotifications.filter(x => x.id === id);
   } catch (error) {
     
@@ -170,11 +169,14 @@ const sendPushNotification = (data, cb) => {
               .then( (data) => {
                 console.log('Waiting for reply - ', id)
                 setTimeout(()=> rejectCall(id, 'timeout'), 40000);
-                pendingPushNotifications.push({ id, cb });
+                pendingPushNotifications.push({ id });
               })
-              .catch( (err) => cb({ error: 'Error ending push notificactions', data: err}));
+              .catch( (err) => {
+                console.error('Error sending push notifications', err)
+                cb({ error: 'Error sending push notificactions', data: err})
+              });
           })
-          //cb({result: 'Sending push notificactions'});
+          cb({result: 'Sending push notificactions'});
         } else {
         cb({ error :'User not found', id: data.user});
         }
